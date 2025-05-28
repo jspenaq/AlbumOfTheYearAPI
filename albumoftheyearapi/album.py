@@ -78,7 +78,7 @@ class AlbumMethods:
                 return json.dumps(
                     self._build_error_response(
                         "Page Limit Error",
-                        "Number of albums exceeded page limit. Exception raise: ." + e,
+                        "Number of albums exceeded page limit. Exception raise: ." + str(e),
                     )
                 )
         json_albums = [album.to_JSON() for album in albums]
@@ -122,13 +122,16 @@ class AlbumMethods:
         Returns:
             str: A JSON string containing a list of Album objects for the specified date,
                  or an error message if an issue occurs during scraping or date mapping.
+        
+        Raises:
+            
         """
         upcoming_albums = {}
         try:
             parsed_albums = self._get_upcoming_releases_by_date(month, day)
         except Exception as e:
             return json.dumps(
-                self._build_error_response("Releases by date Error: ", e.message)
+                self._build_error_response("Releases by date Error: ", str(e))
             )
         json_albums = [album.to_JSON() for album in parsed_albums]
         upcoming_albums["albums"] = json_albums
@@ -209,10 +212,9 @@ class AlbumMethods:
             "Nov",
             "Dec",
         ]
-        try:
-            return month_names[month_number - 1]
-        except:
+        if not 1 <= month_number <= 12:
             raise Exception("Invalid month number")
+        return month_names[month_number - 1]
 
     def _get_upcoming_releases_by_page(self, page_number: int) -> list[Album]:
         """
