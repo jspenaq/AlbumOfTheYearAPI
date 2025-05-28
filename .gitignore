@@ -32,3 +32,6 @@ MANIFEST
 
 # Aider
 .aider*
+
+# Visual Studio Code
+.vscode/*
