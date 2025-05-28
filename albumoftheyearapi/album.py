@@ -8,7 +8,7 @@ class Album:
     Represents an album with its name, artist, and release date.
     """
 
-    def __init__(self, name, artist, date):
+    def __init__(self, name: str, artist: str, date: str):
         """
         Initializes an Album object.
 
@@ -21,7 +21,7 @@ class Album:
         self.artist = artist
         self.release_date = date
 
-    def to_JSON(self):
+    def to_JSON(self) -> str:
         """
         Converts the Album object into a JSON string.
 
@@ -47,7 +47,7 @@ class AlbumMethods:
         self.aoty_albums_per_page = 60
         self.page_limit = 21
 
-    def upcoming_releases_by_limit(self, total):
+    def upcoming_releases_by_limit(self, total: int) -> str:
         """
         Fetches a specified total number of upcoming album releases.
         It calculates the number of pages needed and scrapes them sequentially
@@ -85,7 +85,7 @@ class AlbumMethods:
         upcoming_albums["albums"] = json_albums
         return json.dumps(upcoming_albums)
 
-    def upcoming_releases_by_page(self, page_number):
+    def upcoming_releases_by_page(self, page_number: int) -> str:
         """
         Fetches upcoming album releases for a specific page number.
 
@@ -109,7 +109,7 @@ class AlbumMethods:
         upcoming_albums["albums"] = json_albums
         return json.dumps(upcoming_albums)
 
-    def upcoming_releases_by_date(self, month, day):
+    def upcoming_releases_by_date(self, month: int, day: int) -> str:
         """
         Fetches upcoming album releases for a specific date.
         It scrapes pages until all albums for the target date are found,
@@ -134,7 +134,7 @@ class AlbumMethods:
         upcoming_albums["albums"] = json_albums
         return json.dumps(upcoming_albums)
 
-    def _get_upcoming_releases_by_date(self, month, day):
+    def _get_upcoming_releases_by_date(self, month: int, day: int) -> list[Album]:
         """
         Internal method to scrape upcoming releases for a specific date.
         It iterates through pages, collecting albums until it finds an album
@@ -168,7 +168,7 @@ class AlbumMethods:
             page_number += 1
         return result_albums
 
-    def _build_error_response(self, error_type, msg):
+    def _build_error_response(self, error_type: str, msg: str) -> dict:
         """
         Internal method to build a standardized error response dictionary.
 
@@ -182,7 +182,7 @@ class AlbumMethods:
         error_dict = {"error": error_type, "message": msg}
         return error_dict
 
-    def _map_month_number_to_name(self, month_number):
+    def _map_month_number_to_name(self, month_number: int) -> str:
         """
         Internal method to convert a month number to its three-letter abbreviation.
 
@@ -214,7 +214,7 @@ class AlbumMethods:
         except:
             raise Exception("Invalid month number")
 
-    def _get_upcoming_releases_by_page(self, page_number):
+    def _get_upcoming_releases_by_page(self, page_number: int) -> list[Album]:
         """
         Internal method to scrape upcoming releases from a specific page on Album of the Year.
         Constructs the URL for the given page number and then fetches and parses its content.
@@ -238,7 +238,7 @@ class AlbumMethods:
         parsed_albums = self._parse_albums(albums)
         return parsed_albums
 
-    def _get_release_page_from_request(self, url):
+    def _get_release_page_from_request(self, url: str) -> BeautifulSoup:
         """
         Internal method to fetch and parse an HTML page from a given URL.
         It uses urllib.request to make the HTTP request and BeautifulSoup to parse the HTML.
@@ -257,7 +257,7 @@ class AlbumMethods:
         release_page = BeautifulSoup(unparsed_page, "html.parser")
         return release_page
 
-    def _parse_albums(self, unparsed_albums):
+    def _parse_albums(self, unparsed_albums: list) -> list[Album]:
         """
         Parses a list of BeautifulSoup tag objects (representing raw album HTML blocks)
         into a list of Album objects. Extracts artist, title, and date from each block.
