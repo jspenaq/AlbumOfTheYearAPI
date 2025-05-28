@@ -177,6 +177,44 @@ def test_get_upcoming_releases_by_page_limit_exceeded(album_methods_client):
         album_methods_client._get_upcoming_releases_by_page(album_methods_client.page_limit + 1)
 
 
+@patch('albumoftheyearapi.album.AlbumMethods._map_month_number_to_name', side_effect=Exception("Invalid month"))
+def test_get_upcoming_releases_by_date_internal_map_month_error(mock_map_month, album_methods_client):
+    """Test error when mapping month number in _get_upcoming_releases_by_date."""
+    with pytest.raises(Exception, match="Invalid month"):
+        album_methods_client._get_upcoming_releases_by_date(0, 1)
+
+
+
+@patch('albumoftheyearapi.album.AlbumMethods._get_upcoming_releases_by_page')
+@patch('albumoftheyearapi.album.AlbumMethods._map_month_number_to_name', return_value="Jan")
+def test_get_upcoming_releases_by_date_internal_success(mock_map_month, mock_get_upcoming_releases_by_page, album_methods_client):
+    """Test internal method for scraping releases by date, including loop termination."""
+    # Simulate albums across dates: 2 for Jan 1, 1 for Jan 2 (should stop after Jan 2 is found)
+    mock_get_upcoming_releases_by_page.side_effect = [
+        [
+            Album("Album A", "Artist A", "Jan 1"),
+            Album("Album B", "Artist B", "Jan 1"),
+            Album("Album C", "Artist C", "Jan 2"),  # Next date, should not be included
+            Album("Album D", "Artist D", "Jan 1"),  # Should be included too
+            Album("Album D", "Artist D", "Jan 3"),  # Should not be included
+            Album("Album E", "Artist E", "Jan 4"),  # Should not be included
+            Album("Album F", "Artist F", "Jan 1"),  # Should be included too
+        ],
+        [
+            Album("Album E", "Artist E", "Jan 3"),  # Should not be reached
+        ]
+    ]
+
+    result_albums = album_methods_client._get_upcoming_releases_by_date(1, 1)
+    # Only albums with "Jan 1" before the first "Jan 2" should be included
+    assert len(result_albums) == 4
+    assert all(album.release_date == "Jan 1" for album in result_albums)
+    assert result_albums[0].name == "Album A"
+    assert result_albums[1].name == "Album B"
+    assert result_albums[2].name == "Album D"
+    assert result_albums[3].name == "Album F"
+
+
 # Test upcoming_releases_by_page (public method)
 @patch('albumoftheyearapi.album.AlbumMethods._get_upcoming_releases_by_page')
 def test_upcoming_releases_by_page_public_success(mock_get_upcoming_releases_by_page, album_methods_client, mock_album_objects):
@@ -250,36 +288,6 @@ def test_upcoming_releases_by_limit_error(mock_get_upcoming_releases_by_page, al
     assert "Test error" in result["message"]  # Check for the exception message
     mock_get_upcoming_releases_by_page.assert_called_once_with(1)  # Error happens on first page
 
-
-# # Test _get_upcoming_releases_by_date
-# @patch('albumoftheyearapi.album.AlbumMethods._get_upcoming_releases_by_page')
-# @patch('albumoftheyearapi.album.AlbumMethods._map_month_number_to_name', return_value="Jan")
-# def test_get_upcoming_releases_by_date_internal_success(mock_map_month, mock_get_upcoming_releases_by_page, album_methods_client):
-#     """Test internal method for scraping releases by date, including loop termination."""
-#     # Mock _get_upcoming_releases_by_page to simulate albums across dates
-#     mock_get_upcoming_releases_by_page.side_effect = [
-#         [
-#             Album("Album A", "Artist A", "Jan 1"),
-#             Album("Album B", "Artist B", "Jan 1"),
-#             Album("Album C", "Artist C", "Jan 2"),  # Next date, should stop here
-#             Album("Album D", "Artist D", "Jan 1"),  # This one should not be included
-#         ],
-#         [
-#             Album("Album E", "Artist E", "Jan 3"),  # Should not be reached
-#         ]
-#     ]
-
-#     result_albums = album_methods_client._get_upcoming_releases_by_date(1, 1)
-#     assert len(result_albums) == 2
-
-
-@patch('albumoftheyearapi.album.AlbumMethods._map_month_number_to_name', side_effect=Exception("Invalid month"))
-def test_get_upcoming_releases_by_date_internal_map_month_error(mock_map_month, album_methods_client):
-    """Test error when mapping month number in _get_upcoming_releases_by_date."""
-    with pytest.raises(Exception, match="Invalid month"):
-        album_methods_client._get_upcoming_releases_by_date(0, 1)
-
-
 # Test upcoming_releases_by_date (public method)
 @patch('albumoftheyearapi.album.AlbumMethods._get_upcoming_releases_by_date')
 def test_upcoming_releases_by_date_public_success(mock_get_upcoming_releases_by_date, album_methods_client, mock_album_objects):
@@ -320,32 +328,3 @@ def test_upcoming_albums_date_tomorrow_scenario(album_methods_client, mock_album
         assert len(albums["albums"]) < 60  # Original assertion still holds
         mock_get_date.assert_called_once_with(tomorrow_month, tomorrow_day)
         
-        
-@patch('albumoftheyearapi.album.AlbumMethods._get_upcoming_releases_by_page')
-@patch('albumoftheyearapi.album.AlbumMethods._map_month_number_to_name', return_value="Jan")
-def test_get_upcoming_releases_by_date_internal_success(mock_map_month, mock_get_upcoming_releases_by_page, album_methods_client):
-    """Test internal method for scraping releases by date, including loop termination."""
-    # Simulate albums across dates: 2 for Jan 1, 1 for Jan 2 (should stop after Jan 2 is found)
-    mock_get_upcoming_releases_by_page.side_effect = [
-        [
-            Album("Album A", "Artist A", "Jan 1"),
-            Album("Album B", "Artist B", "Jan 1"),
-            Album("Album C", "Artist C", "Jan 2"),  # Next date, should not be included
-            Album("Album D", "Artist D", "Jan 1"),  # Should be included too
-            Album("Album D", "Artist D", "Jan 3"),  # Should not be included
-            Album("Album E", "Artist E", "Jan 4"),  # Should not be included
-            Album("Album F", "Artist F", "Jan 1"),  # Should be included too
-        ],
-        [
-            Album("Album E", "Artist E", "Jan 3"),  # Should not be reached
-        ]
-    ]
-
-    result_albums = album_methods_client._get_upcoming_releases_by_date(1, 1)
-    # Only albums with "Jan 1" before the first "Jan 2" should be included
-    assert len(result_albums) == 4
-    assert all(album.release_date == "Jan 1" for album in result_albums)
-    assert result_albums[0].name == "Album A"
-    assert result_albums[1].name == "Album B"
-    assert result_albums[2].name == "Album D"
-    assert result_albums[3].name == "Album F"
