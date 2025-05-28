@@ -29,3 +29,6 @@ MANIFEST
 
 # Local History for Visual Studio Code
 .history/
+
+# Aider
+.aider*
