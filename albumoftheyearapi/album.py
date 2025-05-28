@@ -4,22 +4,62 @@ from bs4 import BeautifulSoup
 
 
 class Album:
+    """
+    Represents an album with its name, artist, and release date.
+    """
+
     def __init__(self, name, artist, date):
+        """
+        Initializes an Album object.
+
+        Args:
+            name (str): The name of the album.
+            artist (str): The artist of the album.
+            date (str): The release date of the album (e.g., "Jan 1").
+        """
         self.name = name
         self.artist = artist
         self.release_date = date
 
     def to_JSON(self):
+        """
+        Converts the Album object into a JSON string.
+
+        Returns:
+            str: A JSON string representation of the Album object.
+        """
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=0)
 
 
 class AlbumMethods:
+    """
+    Provides methods to fetch and parse album data from the Album of the Year website.
+    This class handles web scraping logic to retrieve upcoming album releases.
+    """
+
     def __init__(self):
+        """
+        Initializes the AlbumMethods class with configuration for web scraping.
+        Sets the CSS class for identifying album blocks, the number of albums per page,
+        and a hardcoded page limit to prevent excessive scraping.
+        """
         self.upcoming_album_class = "albumBlock five small"
         self.aoty_albums_per_page = 60
         self.page_limit = 21
 
     def upcoming_releases_by_limit(self, total):
+        """
+        Fetches a specified total number of upcoming album releases.
+        It calculates the number of pages needed and scrapes them sequentially
+        until the desired total is met or the page limit is reached.
+
+        Args:
+            total (int): The total number of upcoming albums to retrieve.
+
+        Returns:
+            str: A JSON string containing a list of Album objects, or an error message
+                 if the requested total exceeds the scraping page limit or an error occurs.
+        """
         min_page_number = 1
         max_page_number = total // self.aoty_albums_per_page
         if total % self.aoty_albums_per_page != 0:
@@ -46,6 +86,16 @@ class AlbumMethods:
         return json.dumps(upcoming_albums)
 
     def upcoming_releases_by_page(self, page_number):
+        """
+        Fetches upcoming album releases for a specific page number.
+
+        Args:
+            page_number (int): The page number to retrieve.
+
+        Returns:
+            str: A JSON string containing a list of Album objects for the specified page,
+                 or an error message if the page number is out of range.
+        """
         upcoming_albums = {}
         try:
             parsed_albums = self._get_upcoming_releases_by_page(page_number)
@@ -60,6 +110,19 @@ class AlbumMethods:
         return json.dumps(upcoming_albums)
 
     def upcoming_releases_by_date(self, month, day):
+        """
+        Fetches upcoming album releases for a specific date.
+        It scrapes pages until all albums for the target date are found,
+        and stops when an album from the next day is encountered.
+
+        Args:
+            month (int): The month number (1-12).
+            day (int): The day of the month.
+
+        Returns:
+            str: A JSON string containing a list of Album objects for the specified date,
+                 or an error message if an issue occurs during scraping or date mapping.
+        """
         upcoming_albums = {}
         try:
             parsed_albums = self._get_upcoming_releases_by_date(month, day)
@@ -72,6 +135,21 @@ class AlbumMethods:
         return json.dumps(upcoming_albums)
 
     def _get_upcoming_releases_by_date(self, month, day):
+        """
+        Internal method to scrape upcoming releases for a specific date.
+        It iterates through pages, collecting albums until it finds an album
+        from the day after the target date, indicating all relevant albums have been found.
+
+        Args:
+            month (int): The month number (1-12).
+            day (int): The day of the month.
+
+        Returns:
+            list[Album]: A list of Album objects released on the target date.
+
+        Raises:
+            Exception: If the month number is invalid or a scraping error occurs.
+        """
         month_name = self._map_month_number_to_name(month)
         target_date = (month_name + " " + str(day)).strip()
         next_date = (month_name + " " + str(day + 1)).strip()
@@ -91,10 +169,32 @@ class AlbumMethods:
         return result_albums
 
     def _build_error_response(self, error_type, msg):
+        """
+        Internal method to build a standardized error response dictionary.
+
+        Args:
+            error_type (str): The type of error (e.g., "Page Limit Error").
+            msg (str): A detailed error message.
+
+        Returns:
+            dict: A dictionary containing error type and message.
+        """
         error_dict = {"error": error_type, "message": msg}
         return error_dict
 
     def _map_month_number_to_name(self, month_number):
+        """
+        Internal method to convert a month number to its three-letter abbreviation.
+
+        Args:
+            month_number (int): The month number (1-12).
+
+        Returns:
+            str: The three-letter abbreviation of the month (e.g., "Jan", "Feb").
+
+        Raises:
+            Exception: If the month number is invalid (not between 1 and 12).
+        """
         month_names = [
             "Jan",
             "Feb",
@@ -115,6 +215,19 @@ class AlbumMethods:
             raise Exception("Invalid month number")
 
     def _get_upcoming_releases_by_page(self, page_number):
+        """
+        Internal method to scrape upcoming releases from a specific page on Album of the Year.
+        Constructs the URL for the given page number and then fetches and parses its content.
+
+        Args:
+            page_number (int): The page number to scrape.
+
+        Returns:
+            list[Album]: A list of Album objects found on the specified page.
+
+        Raises:
+            Exception: If the page number exceeds the defined page limit.
+        """
         if page_number > self.page_limit:
             raise Exception("Page number out of range")
         if int(page_number) == 1:
@@ -126,12 +239,36 @@ class AlbumMethods:
         return parsed_albums
 
     def _get_release_page_from_request(self, url):
+        """
+        Internal method to fetch and parse an HTML page from a given URL.
+        It uses urllib.request to make the HTTP request and BeautifulSoup to parse the HTML.
+
+        Args:
+            url (str): The URL of the page to fetch.
+
+        Returns:
+            BeautifulSoup: A BeautifulSoup object representing the parsed HTML content.
+
+        Raises:
+            URLError: If there's an issue with the network request (e.g., invalid URL, connection error).
+        """
         request = Request(url, headers={"User-Agent": "Mozilla/6.0"})
         unparsed_page = urlopen(request).read()
         release_page = BeautifulSoup(unparsed_page, "html.parser")
         return release_page
 
     def _parse_albums(self, unparsed_albums):
+        """
+        Parses a list of BeautifulSoup tag objects (representing raw album HTML blocks)
+        into a list of Album objects. Extracts artist, title, and date from each block.
+
+        Args:
+            unparsed_albums (list): A list of BeautifulSoup tag objects, each containing
+                                    the HTML structure for an album.
+
+        Returns:
+            list[Album]: A list of Album objects, each populated with extracted data.
+        """
         parsed_albums = []
         for album in unparsed_albums:
             artist = str(album.find("div", {"class": "artistTitle"}).getText())
