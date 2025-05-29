@@ -232,9 +232,7 @@ class AlbumMethods:
         """
         if page_number > self.page_limit:
             raise Exception("Page number out of range")
-        if int(page_number) == 1:
-            page_number = ""
-        url = "https://www.albumoftheyear.org/upcoming/" + str(page_number) + "/"
+        url = "https://www.albumoftheyear.org/upcoming/" + (str(page_number) + "/" if page_number > 1 else "")
         page = self._get_release_page_from_request(url)
         albums = page.find_all("div", {"class": self.upcoming_album_class})
         parsed_albums = self._parse_albums(albums)

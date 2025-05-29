@@ -161,7 +161,7 @@ def test_get_upcoming_releases_by_page_success(mock_get_page, mock_parse_albums,
 
     # Test page 1 (empty string URL)
     albums = album_methods_client._get_upcoming_releases_by_page(1)
-    mock_get_page.assert_called_once_with("https://www.albumoftheyear.org/upcoming//")
+    mock_get_page.assert_called_once_with("https://www.albumoftheyear.org/upcoming/")
     assert albums == mock_album_objects
     mock_get_page.reset_mock()  # Reset mock call history for next assertion
 
