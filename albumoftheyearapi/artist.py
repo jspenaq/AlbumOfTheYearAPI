@@ -13,7 +13,7 @@ class ArtistMethods:
         
         self.albums = []
 
-    def __set_artist_page(self, artist, url):
+    def __set_artist_page(self, artist: str, url: str) -> None:
         self.artist = artist
         self.url = url
         self.req = Request(self.url, headers={"User-Agent": "Mozilla/6.0"})
@@ -22,13 +22,13 @@ class ArtistMethods:
         self.__get_discography(artist)
         self.__get_community_data(artist)
 
-    def __class_text(self, artist, class_name, url):
+    def __class_text(self, artist: str, class_name: str, url: str) -> str:
         if self.url != url:
             self.__set_artist_page(artist, url)
 
         return self.artist_page.find(class_=class_name).getText()
-    
-    def __get_discography(self, artist):
+
+    def __get_discography(self, artist: str) -> None:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
@@ -67,7 +67,7 @@ class ArtistMethods:
         # self.appears_on = categorized_albums['Appears OnView All'] # UNUSED
         self.similar_artists_cat = categorized_albums['Similar Artists']
 
-    def __get_community_data(self, artist):
+    def __get_community_data(self, artist: str) -> None:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
@@ -90,120 +90,120 @@ class ArtistMethods:
 
         self.top_songs = extracted_texts
 
-    def artist_albums(self, artist):
+    def artist_albums(self, artist: str) -> list[str]:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
             
         return self.albums
 
-    def artist_albums_json(self, artist):
+    def artist_albums_json(self, artist: str) -> str:
         albums_JSON = {"albums": self.artist_albums(artist)}
         return json.dumps(albums_JSON)
 
-    def artist_mixtapes(self, artist):
+    def artist_mixtapes(self, artist: str) -> list[str]:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
             
         return self.mixtapes
 
-    def artist_mixtapes_json(self, artist):
+    def artist_mixtapes_json(self, artist: str) -> str:
         mixtapes_JSON = {"mixtapes": self.artist_mixtapes(artist)}
         return json.dumps(mixtapes_JSON)
 
-    def artist_eps(self, artist):
+    def artist_eps(self, artist: str) -> list[str]:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
             
         return self.eps
 
-    def artist_eps_json(self, artist):
+    def artist_eps_json(self, artist: str) -> str:
         eps_JSON = {"eps": self.artist_eps(artist)}
         return json.dumps(eps_JSON)
 
-    def artist_singles(self, artist):
+    def artist_singles(self, artist: str) -> list[str]:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
         
         return self.singles
 
-    def artist_singles_json(self, artist):
+    def artist_singles_json(self, artist: str) -> str:
         singles_JSON = {"singles": self.artist_singles(artist)}
         return json.dumps(singles_JSON)
 
-    def artist_name(self, artist):
+    def artist_name(self, artist: str) -> str:
         return self.__class_text(
             artist, "artistHeadline", self.artist_url + artist + "/"
         )
 
-    def artist_name_json(self, artist):
+    def artist_name_json(self, artist: str) -> str:
         name_JSON = {"name": self.artist_name(artist)}
         return json.dumps(name_JSON)
 
-    def artist_critic_score(self, artist):
+    def artist_critic_score(self, artist: str) -> str:
         return self.__class_text(
             artist, "artistCriticScore", self.artist_url + artist + "/"
         )
 
-    def artist_critic_score_json(self, artist):
+    def artist_critic_score_json(self, artist: str) -> str:
         critic_score_JSON = {"critic score": self.artist_critic_score(artist)}
         return json.dumps(critic_score_JSON)
 
-    def artist_user_score(self, artist):
+    def artist_user_score(self, artist: str) -> str:
         return self.__class_text(
             artist, "artistUserScore", self.artist_url + artist + "/"
         )
 
-    def artist_user_score_json(self, artist):
+    def artist_user_score_json(self, artist: str) -> str:
         user_score_JSON = {"user score": self.artist_user_score(artist)}
         return json.dumps(user_score_JSON)
 
-    def artist_total_score(self, artist):
+    def artist_total_score(self, artist: str) -> float:
         return (
             int(self.artist_critic_score(artist)) + int(self.artist_user_score(artist))
         ) / 2
 
-    def artist_total_score_json(self, artist):
+    def artist_total_score_json(self, artist: str) -> str:
         total_score_JSON = {"total score": self.artist_total_score(artist)}
         return json.dumps(total_score_JSON)
 
-    def artist_follower_count(self, artist):
+    def artist_follower_count(self, artist: str) -> str:
         return self.__class_text(artist, "followCount", self.artist_url + artist + "/")
 
-    def artist_follower_count_json(self, artist):
+    def artist_follower_count_json(self, artist: str) -> str:
         follower_count_JSON = {"follower count": self.artist_follower_count(artist)}
         return json.dumps(follower_count_JSON)
 
-    def artist_details(self, artist):
+    def artist_details(self, artist: str) -> str:
         return self.__class_text(
             artist, "artistTopBox info", self.artist_url + artist + "/"
         )
 
-    def artist_details_json(self, artist):
+    def artist_details_json(self, artist: str) -> str:
         artist_details_JSON = {"artist details": self.artist_details(artist)}
         return json.dumps(artist_details_JSON)
 
-    def artist_top_songs(self, artist):
+    def artist_top_songs(self, artist: str) -> list[str]:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
             
         return self.top_songs
 
-    def artist_top_songs_json(self, artist):
+    def artist_top_songs_json(self, artist: str) -> str:
         artist_top_songs_JSON = {"top songs": self.artist_top_songs(artist)}
         return json.dumps(artist_top_songs_JSON)
 
-    def similar_artists(self, artist):
+    def similar_artists(self, artist: str) -> list[str]:
         url = self.artist_url + artist + "/"
         if self.url != url:
             self.__set_artist_page(artist, url)
             
         return self.similar_artists_cat
 
-    def similar_artists_json(self, artist):
+    def similar_artists_json(self, artist: str) -> str:
         similar_artists_JSON = {"similar artists": self.similar_artists(artist)}
         return json.dumps(similar_artists_JSON)
