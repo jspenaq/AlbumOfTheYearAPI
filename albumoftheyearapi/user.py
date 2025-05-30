@@ -196,8 +196,10 @@ class UserMethods:
         if self.url != url or self.user_page is None:
             self.__set_user_page(user, url)
 
-        about = self.user_page.find(class_="aboutUser").getText()
-        return about
+        about = self.user_page.find(class_="aboutUser")
+        if about is None:
+            return ""
+        return about.getText()
 
     def user_about_json(self, user: str) -> str:
         """
@@ -233,22 +235,11 @@ class UserMethods:
 
         user_rating_distribution = []
         for i in range(11):
-            rating = (
-                user_rating_distribution_tags[i]
-                .getText()
-                .encode("ascii", "ignore")
-                .decode()
-            )
-            if i == 0 or i == 10:
-                rating = rating[3:]
-                if rating == "":
-                    rating = "0" # Changed to string "0" to match other elements
-                user_rating_distribution.append(rating)
-            else:
-                rating = rating[5:]
-                if rating == "":
-                    rating = "0" # Changed to string "0" to match other elements
-                user_rating_distribution.append(rating)
+            tag_content = user_rating_distribution_tags[i].getText()
+            # Extract the number, assuming it's the last part after splitting by space
+            # and strip any whitespace. If content is empty, default to "0".
+            rating = tag_content.split()[-1].strip() if tag_content.strip() else "0"
+            user_rating_distribution.append(rating)
 
         return user_rating_distribution
 
@@ -303,7 +294,10 @@ class UserMethods:
 
         # This might need more specific parsing if individual ratings are desired.
         # Currently, it returns the text of the first albumBlock found.
-        return self.user_page.find(class_="albumBlock").getText()
+        album_block = self.user_page.find(class_="albumBlock")
+        if album_block is None:
+            return ""
+        return album_block.getText()
 
     def user_ratings_json(self, user: str) -> str:
         """
