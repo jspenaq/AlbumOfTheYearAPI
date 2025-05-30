@@ -215,6 +215,25 @@ def test_get_upcoming_releases_by_date_internal_success(mock_map_month, mock_get
     assert result_albums[3].name == "Album F"
 
 
+def test_get_upcoming_releases_by_date_next_month(album_methods_client):
+    """Test _get_upcoming_releases_by_date when the next day is in the next month."""
+    # December 31st, next day is January 1st
+    with patch('albumoftheyearapi.album.AlbumMethods._get_upcoming_releases_by_page') as mock_get_page:
+        mock_get_page.side_effect = [
+            [
+                Album("Album A", "Artist A", "Dec 31"),
+                Album("Album B", "Artist B", "Dec 31"),
+                Album("Album C", "Artist C", "Jan 1"),
+            ],
+            []  # Empty page to stop the loop
+        ]
+        # Call the method for December 31st
+        result_albums = album_methods_client._get_upcoming_releases_by_date(12, 31)
+        assert len(result_albums) == 2
+        assert result_albums[0].release_date == "Dec 31"
+        assert result_albums[1].release_date == "Dec 31"
+
+
 # Test upcoming_releases_by_page (public method)
 @patch('albumoftheyearapi.album.AlbumMethods._get_upcoming_releases_by_page')
 def test_upcoming_releases_by_page_public_success(mock_get_upcoming_releases_by_page, album_methods_client, mock_album_objects):
