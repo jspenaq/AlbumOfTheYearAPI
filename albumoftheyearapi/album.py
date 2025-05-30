@@ -37,15 +37,17 @@ class AlbumMethods:
     This class handles web scraping logic to retrieve upcoming album releases.
     """
 
+    BASE_URL = "https://www.albumoftheyear.org"
+
     def __init__(self):
         """
         Initializes the AlbumMethods class with configuration for web scraping.
         Sets the CSS class for identifying album blocks, the number of albums per page,
         and a hardcoded page limit to prevent excessive scraping.
         """
-        self.upcoming_album_class = "albumBlock five small"
-        self.aoty_albums_per_page = 60
-        self.page_limit = 21
+        self.upcoming_album_class: str = "albumBlock five small"
+        self.aoty_albums_per_page: int = 60
+        self.page_limit: int = 21
 
     def upcoming_releases_by_limit(self, total: int) -> str:
         """
@@ -155,17 +157,29 @@ class AlbumMethods:
         """
         month_name = self._map_month_number_to_name(month)
         target_date = (month_name + " " + str(day)).strip()
-        next_date = (month_name + " " + str(day + 1)).strip()
+        
+        # Calculate the next day, handling month and year rollover
+        next_day = day + 1
+        next_month = month
+        if next_day > 31:
+            next_day = 1
+            next_month += 1
+            if next_month > 12:
+                next_month = 1  # January of next year
+
+        next_month_name = self._map_month_number_to_name(next_month)
+        next_date = (next_month_name + " " + str(next_day)).strip()
+
         page_number = 1
         result_albums = []
-
         complete = False
+
         while not complete:
             albums = self._get_upcoming_releases_by_page(page_number)
             for album in albums:
                 if album.release_date == target_date:
                     result_albums.append(album)
-
+                # Check if we've reached the next day, if so, stop scraping
                 if album.release_date == next_date:
                     complete = True
             page_number += 1
@@ -232,7 +246,7 @@ class AlbumMethods:
         """
         if page_number > self.page_limit:
             raise Exception("Page number out of range")
-        url = "https://www.albumoftheyear.org/upcoming/" + (str(page_number) + "/" if page_number > 1 else "")
+        url = f"{self.BASE_URL}/upcoming/" + (f"{page_number}/" if page_number > 1 else "")
         page = self._get_release_page_from_request(url)
         albums = page.find_all("div", {"class": self.upcoming_album_class})
         parsed_albums = self._parse_albums(albums)
